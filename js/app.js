@@ -137,7 +137,11 @@ function toggleMetronome() {
   metroPlaying = true;
   screens.metronome.classList.add("playing");
   engine.startLoop(
-    () => ({ bpm: getBpm(), beatsPerBar: parseInt(metroNum.value, 10) }),
+    () => ({
+      bpm: getBpm(),
+      beatsPerBar: parseInt(metroNum.value, 10),
+      den: parseInt(metroDen.value, 10),
+    }),
     ({ beat, accent }) => {
       const dots = $$("#metro-beats .beat-dot");
       dots.forEach((d) => d.classList.remove("on", "accent"));
@@ -272,7 +276,7 @@ function updateEditorDuration() {
 }
 
 function sectionSummary(section) {
-  const secs = section.measures * section.num * (60 / section.bpm);
+  const secs = section.measures * section.num * (60 / section.bpm) * (4 / section.den);
   return `${section.num}/${section.den} · ${section.bpm} BPM · ${section.measures} bar${section.measures === 1 ? "" : "s"} · ${formatDuration(secs)}`;
 }
 

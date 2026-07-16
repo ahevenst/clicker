@@ -36,9 +36,10 @@ Flows worth driving:
 - **Preview**: `#editor-play`; assert `.section-card.active-playing` index
   advances and `#progress-fill` width grows.
 - **MIDI export**: `page.waitForEvent("download")` + click `#editor-export`,
-  then parse the .mid bytes: `MThd`, format 0, division 480, tempo meta
-  scaled by den/4 (BPM = beat unit), timesig metas per section, note-ons on
-  channel 10 (76 accent / 77 beat).
+  then parse the .mid bytes: `MThd`, format 0, division 480, tempo meta =
+  60e6/BPM (BPM is always quarter-note BPM; clicks land on denominator
+  notes, so /8 sections click twice per beat), timesig metas per section,
+  note-ons on channel 10 (76 accent / 77 beat).
 - **Persistence**: save, reload page, track survives (localStorage key
   `clicker.tracks.v1`).
 
@@ -49,3 +50,10 @@ Flows worth driving:
 - Deleting the last section auto-inserts one default section (by design).
 - Tap tempo under Playwright reads slightly low (~111 for 500 ms waits) —
   timer jitter, not a bug.
+- Measuring click intervals via a MutationObserver on the beat dots:
+  filter out duplicate records. `classList.remove()` fires a mutation even
+  when the class was absent, so each beat yields two records ~0 ms apart
+  and naive averaging halves the interval. Dedupe records closer than
+  ~50 ms before averaging.
+- Headless Chromium's AudioContext runs at wall-clock speed here (verified
+  ratio 1.00) — timing measurements are trustworthy.

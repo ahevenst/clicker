@@ -75,7 +75,9 @@ export class ClickEngine {
   /**
    * Mode 1: endless loop. `getState` is read live on every scheduled beat so
    * tempo / time-signature changes take effect within one beat.
-   * getState() -> { bpm, beatsPerBar }
+   * getState() -> { bpm, beatsPerBar, den }
+   * bpm is always quarter-note BPM; the denominator sets the click
+   * subdivision (den 8 -> clicks are eighth notes, two per quarter).
    */
   startLoop(getState, onVisualBeat) {
     this.stop();
@@ -90,14 +92,14 @@ export class ClickEngine {
     const schedule = () => {
       const horizon = this.ctx.currentTime + LOOKAHEAD_S;
       while (nextTime < horizon) {
-        const { bpm, beatsPerBar } = getState();
+        const { bpm, beatsPerBar, den } = getState();
         const accent = beatInBar === 0;
         this._scheduleClick(nextTime, accent);
         this.visualQueue.push({
           time: nextTime,
           payload: { beat: beatInBar, beatsPerBar, accent },
         });
-        nextTime += 60 / bpm;
+        nextTime += (60 / bpm) * (4 / (den || 4));
         beatInBar = (beatInBar + 1) % Math.max(1, beatsPerBar);
       }
     };
@@ -183,14 +185,14 @@ export class ClickEngine {
 
 /**
  * Expand a track's sections into a flat list of beat events for playback.
- * The BPM of a section refers to its beat unit (the denominator note),
- * e.g. 6/8 at 120 means 120 eighth notes per minute.
+ * BPM is always quarter-note BPM; each click is one denominator note,
+ * e.g. 6/8 at 120 clicks six eighth notes per bar at 240 clicks/minute.
  */
 export function trackToBeats(sections) {
   const beats = [];
   let offset = 0;
   sections.forEach((section, sectionIndex) => {
-    const beatDur = 60 / section.bpm;
+    const beatDur = (60 / section.bpm) * (4 / section.den);
     for (let m = 0; m < section.measures; m++) {
       for (let b = 0; b < section.num; b++) {
         beats.push({
@@ -211,7 +213,7 @@ export function trackToBeats(sections) {
 /** Total duration of a track in seconds. */
 export function trackDuration(sections) {
   return sections.reduce(
-    (total, s) => total + s.measures * s.num * (60 / s.bpm),
+    (total, s) => total + s.measures * s.num * (60 / s.bpm) * (4 / s.den),
     0
   );
 }

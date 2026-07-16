@@ -30,8 +30,8 @@ function u16(value) {
 
 /**
  * Build a .mid file for a track.
- * Section BPM refers to the beat unit (the denominator note), so the MIDI
- * tempo (microseconds per quarter note) is scaled by den/4.
+ * Section BPM is always quarter-note BPM, mapping directly onto the MIDI
+ * tempo (microseconds per quarter note). Clicks land on denominator notes.
  */
 export function trackToMidi(track) {
   const events = []; // flat byte list for the track chunk
@@ -46,8 +46,8 @@ export function trackToMidi(track) {
   push(0, [0xff, 0x03, ...varLen(nameBytes.length), ...nameBytes]);
 
   for (const section of track.sections) {
-    // Tempo: microseconds per quarter note.
-    const usPerQuarter = Math.max(1, Math.round((60000000 / section.bpm) * (section.den / 4)));
+    // Tempo: microseconds per quarter note (BPM is quarter-note BPM).
+    const usPerQuarter = Math.max(1, Math.round(60000000 / section.bpm));
     push(pendingDelta, [
       0xff, 0x51, 0x03,
       (usPerQuarter >> 16) & 0xff,

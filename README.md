@@ -24,8 +24,10 @@ schedules all clicks in the next 120 ms sample-accurately on the
 created with `latencyHint: "interactive"`. Visuals sync back to the audio
 clock via `requestAnimationFrame`.
 
-Note: BPM refers to the beat unit of the time signature (e.g. 6/8 at 120
-means 120 eighth notes per minute), both in playback and in MIDI export.
+Note: BPM is always quarter-note BPM regardless of time signature. The
+denominator sets the click subdivision: /4 clicks quarter notes (one click
+per BPM beat), /8 clicks eighth notes (two per beat), and so on — both in
+playback and in MIDI export (where BPM maps directly to the tempo meta).
 
 ## Run it
 
